@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require "package_cloud"
+
+PackageCloud::CLI::Entry.start(ARGV)
