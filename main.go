@@ -58,10 +58,19 @@ type distro struct {
 type distros map[string][]distro
 
 func main() {
-	var d distros
-	err := sendRequest("/api/v1/distributions.json", &d)
+	var distros distros
+	err := sendRequest("/api/v1/distributions.json", &distros)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%v\n", d)
+	//log.Printf("%v\n", distros)
+
+	for _, format := range []string{"deb", "dsc", "rpm"} {
+		fmt.Println(format)
+		for _, d := range distros[format] {
+			for _, v := range d.Versions {
+				fmt.Printf("\"%s/%s\": %d,\n", d.IndexName, v.IndexName, v.ID)
+			}
+		}
+	}
 }
