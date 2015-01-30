@@ -8,6 +8,10 @@ A collection of Go command-line tools to talk to the [PackageCloud API].
 
 ## Pushing packages
 
+This is the only operation supported so far.
+
+Make sure that `PACKAGECLOUD_TOKEN` is set in the environment.
+
     $ pkgcloud-push user/repo/distro/version /path/to/packages
 
 Examples:
