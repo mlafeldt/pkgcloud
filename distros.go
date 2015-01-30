@@ -1,7 +1,7 @@
 // List of supported distributions with their internal names and IDs.
 // Generated from https://packagecloud.io/docs/api#resource_distributions
 
-package main
+package pkgcloud
 
 var debDistros = map[string]int{
 	"ubuntu/warty":    1,
