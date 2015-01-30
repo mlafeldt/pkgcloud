@@ -69,6 +69,7 @@ func main() {
 	}
 
 	dest := flag.Args()[0]
+	// TODO: upload packages in parallel
 	for _, source := range flag.Args()[1:] {
 		fmt.Printf("Pushing %s to %s ...\n", source, dest)
 		if err := pushPackage(dest, source); err != nil {
