@@ -3,7 +3,18 @@
 
 package pkgcloud
 
-var debDistros = map[string]int{
+import (
+	"errors"
+	"strings"
+)
+
+const (
+	ExtensionDeb = ".deb"
+	ExtensionDsc = ".dsc"
+	ExtensionRpm = ".rpm"
+)
+
+var debDistroIDs = map[string]int{
 	"ubuntu/warty":    1,
 	"ubuntu/hoary":    2,
 	"ubuntu/breezy":   3,
@@ -33,9 +44,7 @@ var debDistros = map[string]int{
 	"any/any":         35,
 }
 
-var dscDistros = debDistros
-
-var rpmDistros = map[string]int{
+var rpmDistroIDs = map[string]int{
 	"el/5":         26,
 	"el/6":         27,
 	"el/7":         140,
@@ -50,4 +59,20 @@ var rpmDistros = map[string]int{
 	"scientific/5": 138,
 	"scientific/6": 139,
 	"scientific/7": 141,
+}
+
+func distroID(ext, name string) (int, error) {
+	switch strings.ToLower(ext) {
+	case ExtensionDeb, ExtensionDsc:
+		if id, ok := debDistroIDs[name]; ok {
+			return id, nil
+		}
+	case ExtensionRpm:
+		if id, ok := rpmDistroIDs[name]; ok {
+			return id, nil
+		}
+	default:
+		return 0, errors.New("invalid file extension: " + ext)
+	}
+	return 0, errors.New("invalid distro name: " + name)
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -27,17 +28,15 @@ func (c Client) PushPackage(target, name string) error {
 	s := strings.Split(target, "/")
 	user, repo, distro, version := s[0], s[1], s[2], s[3]
 
-	// TODO: support other formats like .rpm
-	distroVersionName := distro + "/" + version
-	distroVersionID, ok := debDistros[distroVersionName]
-	if !ok {
-		return errors.New("Unknown distro version: " + distroVersionName)
+	id, err := distroID(filepath.Ext(name), distro+"/"+version)
+	if err != nil {
+		return err
 	}
 
 	endpoint := fmt.Sprintf("%s/api/v1/repos/%s/%s/packages.json",
 		serviceURL, user, repo)
 	extraParams := map[string]string{
-		"package[distro_version_id]": strconv.Itoa(distroVersionID),
+		"package[distro_version_id]": strconv.Itoa(id),
 	}
 	request, err := NewFileUploadRequest(endpoint, extraParams,
 		"package[package_file]", name)
