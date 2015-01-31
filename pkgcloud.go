@@ -26,6 +26,9 @@ func NewClient(token string) *Client {
 
 func (c Client) PushPackage(target, name string) error {
 	s := strings.Split(target, "/")
+	if len(s) != 4 {
+		return errors.New("invalid target: " + target)
+	}
 	user, repo, distro, version := s[0], s[1], s[2], s[3]
 
 	id, err := distroID(filepath.Ext(name), distro+"/"+version)
