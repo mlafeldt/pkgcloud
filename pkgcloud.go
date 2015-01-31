@@ -62,8 +62,7 @@ func (c Client) PushPackage(target, name string) error {
 
 	// TODO: unmarshal JSON to get error
 	if resp.StatusCode != http.StatusCreated {
-		msg := fmt.Sprintf("HTTP error: %s\nHTTP body: %s\n",
-			resp.Status, body)
+		msg := fmt.Sprintf("HTTP error (%d): %s", resp.StatusCode, body)
 		return errors.New(msg)
 	}
 

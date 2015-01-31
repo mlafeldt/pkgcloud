@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"sync"
 
 	"github.com/mlafeldt/pkgcloud"
 )
@@ -19,17 +18,28 @@ func main() {
 
 	client := pkgcloud.NewClient("")
 	target := flag.Args()[0]
+	packages := flag.Args()[1:]
 
-	var wg sync.WaitGroup
-	for _, name := range flag.Args()[1:] {
-		wg.Add(1)
+	resc := make(chan string)
+	errc := make(chan error)
+
+	fmt.Printf("Pushing %d package(s) to %s ...\n", len(packages), target)
+	for _, name := range packages {
 		go func(name string) {
-			defer wg.Done()
-			fmt.Printf("Pushing %s to %s ...\n", name, target)
 			if err := client.PushPackage(target, name); err != nil {
-				log.Fatal(err)
+				errc <- fmt.Errorf("%s ... %s", name, err)
+				return
 			}
+			resc <- fmt.Sprintf("%s ... OK", name)
 		}(name)
 	}
-	wg.Wait()
+
+	for range packages {
+		select {
+		case res := <-resc:
+			log.Println(res)
+		case err := <-errc:
+			log.Println(err)
+		}
+	}
 }
