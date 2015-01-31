@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/mlafeldt/pkgcloud"
 )
@@ -34,12 +35,17 @@ func main() {
 		}(name)
 	}
 
+	failure := false
 	for range packages {
 		select {
 		case res := <-resc:
 			log.Println(res)
 		case err := <-errc:
 			log.Println(err)
+			failure = true
 		}
+	}
+	if failure {
+		os.Exit(1)
 	}
 }
