@@ -25,14 +25,14 @@ func main() {
 	errc := make(chan error)
 
 	fmt.Printf("Pushing %d package(s) to %s ...\n", len(packages), target)
-	for _, name := range packages {
-		go func(name string) {
-			if err := client.PushPackage(target, name); err != nil {
-				errc <- fmt.Errorf("%s ... %s", name, err)
+	for _, pkg := range packages {
+		go func(pkg string) {
+			if err := client.CreatePackage(target, pkg); err != nil {
+				errc <- fmt.Errorf("%s ... %s", pkg, err)
 				return
 			}
-			resc <- fmt.Sprintf("%s ... OK", name)
-		}(name)
+			resc <- fmt.Sprintf("%s ... OK", pkg)
+		}(pkg)
 	}
 
 	failure := false

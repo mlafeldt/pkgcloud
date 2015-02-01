@@ -1,4 +1,4 @@
-package pkgcloud
+package upload
 
 import (
 	"bytes"
@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 )
 
-// Creates a new file upload HTTP request with optional extra params.
+// NewRequest creates a new file upload HTTP request with optional extra params.
 // Based on https://gist.github.com/mattetti/5914158
-func NewFileUploadRequest(url string, params map[string]string, paramName, path string) (*http.Request, error) {
+func NewRequest(url string, params map[string]string, paramName, path string) (*http.Request, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err

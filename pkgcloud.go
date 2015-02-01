@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/mlafeldt/pkgcloud/upload"
 )
 
 var serviceURL = "https://packagecloud.io"
@@ -24,14 +26,14 @@ func NewClient(token string) *Client {
 	return &Client{token}
 }
 
-func (c Client) PushPackage(target, name string) error {
+func (c Client) CreatePackage(target, pkgFile string) error {
 	s := strings.Split(target, "/")
 	if len(s) != 4 {
 		return errors.New("invalid target: " + target)
 	}
 	user, repo, distro, version := s[0], s[1], s[2], s[3]
 
-	id, err := distroID(filepath.Ext(name), distro+"/"+version)
+	id, err := distroID(filepath.Ext(pkgFile), distro+"/"+version)
 	if err != nil {
 		return err
 	}
@@ -41,8 +43,8 @@ func (c Client) PushPackage(target, name string) error {
 	extraParams := map[string]string{
 		"package[distro_version_id]": strconv.Itoa(id),
 	}
-	request, err := NewFileUploadRequest(endpoint, extraParams,
-		"package[package_file]", name)
+	request, err := upload.NewRequest(endpoint, extraParams,
+		"package[package_file]", pkgFile)
 	if err != nil {
 		return err
 	}
