@@ -1,14 +1,12 @@
 package pkgcloud
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/mlafeldt/pkgcloud/upload"
 )
@@ -26,14 +24,8 @@ func NewClient(token string) *Client {
 	return &Client{token}
 }
 
-func (c Client) CreatePackage(target, pkgFile string) error {
-	s := strings.Split(target, "/")
-	if len(s) != 4 {
-		return errors.New("invalid target: " + target)
-	}
-	user, repo, distro, version := s[0], s[1], s[2], s[3]
-
-	id, err := distroID(filepath.Ext(pkgFile), distro+"/"+version)
+func (c Client) CreatePackage(user, repo, distro, pkgFile string) error {
+	distID, err := distroID(filepath.Ext(pkgFile), distro)
 	if err != nil {
 		return err
 	}
@@ -41,7 +33,7 @@ func (c Client) CreatePackage(target, pkgFile string) error {
 	endpoint := fmt.Sprintf("%s/api/v1/repos/%s/%s/packages.json",
 		serviceURL, user, repo)
 	extraParams := map[string]string{
-		"package[distro_version_id]": strconv.Itoa(id),
+		"package[distro_version_id]": strconv.Itoa(distID),
 	}
 	request, err := upload.NewRequest(endpoint, extraParams,
 		"package[package_file]", pkgFile)
