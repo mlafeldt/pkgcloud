@@ -24,14 +24,14 @@ func NewClient(token string) *Client {
 	return &Client{token}
 }
 
-func (c Client) CreatePackage(user, repo, distro, pkgFile string) error {
+func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 	distID, err := distroID(filepath.Ext(pkgFile), distro)
 	if err != nil {
 		return err
 	}
 
-	endpoint := fmt.Sprintf("%s/api/v1/repos/%s/%s/packages.json",
-		serviceURL, user, repo)
+	endpoint := fmt.Sprintf("%s/api/v1/repos/%s/packages.json",
+		serviceURL, repo)
 	extraParams := map[string]string{
 		"package[distro_version_id]": strconv.Itoa(distID),
 	}
