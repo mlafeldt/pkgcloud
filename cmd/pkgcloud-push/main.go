@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/mlafeldt/pkgcloud"
 )
@@ -20,19 +19,12 @@ func main() {
 	if flag.NArg() < 2 {
 		log.Fatal(usage)
 	}
-	target := flag.Args()[0]
-	packages := flag.Args()[1:]
 
-	var repo, distro string
-	elems := strings.Split(target, "/")
-	if len(elems) == 2 {
-		repo = strings.Join(elems[0:2], "/")
-	} else if len(elems) == 4 {
-		repo = strings.Join(elems[0:2], "/")
-		distro = strings.Join(elems[2:4], "/")
-	} else {
-		log.Fatal("error: invalid target: " + target)
+	target, err := newTarget(flag.Args()[0])
+	if err != nil {
+		log.Fatalf("error: %s\n", err)
 	}
+	packages := flag.Args()[1:]
 
 	client := pkgcloud.NewClient("")
 	resc := make(chan string)
@@ -41,7 +33,7 @@ func main() {
 	fmt.Printf("Pushing %d package(s) to %s ...\n", len(packages), target)
 	for _, pkg := range packages {
 		go func(pkg string) {
-			if err := client.CreatePackage(repo, distro, pkg); err != nil {
+			if err := client.CreatePackage(target.repo, target.distro, pkg); err != nil {
 				errc <- fmt.Errorf("%s ... %s", pkg, err)
 				return
 			}
