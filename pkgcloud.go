@@ -1,6 +1,8 @@
 package pkgcloud
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -22,6 +24,30 @@ func NewClient(token string) *Client {
 		token = os.Getenv("PACKAGECLOUD_TOKEN")
 	}
 	return &Client{token}
+}
+
+func decodeResponse(status int, body []byte) error {
+	switch status {
+	case http.StatusOK, http.StatusCreated:
+		return nil
+	case http.StatusUnauthorized, http.StatusNotFound:
+		return fmt.Errorf("HTTP status: %s", http.StatusText(status))
+	case 422: // Unprocessable Entity
+		var v map[string][]string
+		if err := json.Unmarshal(body, &v); err != nil {
+			return err
+		}
+		for _, messages := range v {
+			for _, msg := range messages {
+				// Only return the very first error message
+				return errors.New(msg)
+			}
+			break
+		}
+		return fmt.Errorf("invalid HTTP body: %s", body)
+	default:
+		return fmt.Errorf("unexpected HTTP status: %d", status)
+	}
 }
 
 func (c Client) CreatePackage(repo, distro, pkgFile string) error {
@@ -54,10 +80,5 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 		return err
 	}
 
-	// TODO: unmarshal JSON to get error
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("HTTP error (%d): %s", resp.StatusCode, body)
-	}
-
-	return nil
+	return decodeResponse(resp.StatusCode, body)
 }
