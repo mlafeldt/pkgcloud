@@ -1,5 +1,7 @@
 # pkgcloud
 
+[![GoDoc](https://godoc.org/github.com/mlafeldt/pkgcloud?status.svg)](https://godoc.org/github.com/mlafeldt/pkgcloud)
+
 Talk to the [PackageCloud API](https://packagecloud.io/docs/api), in Go.
 
 ## Installation
@@ -8,8 +10,8 @@ Talk to the [PackageCloud API](https://packagecloud.io/docs/api), in Go.
 
 ## API Usage
 
-Please check the source code, in particular [pkgcloud.go](pkgcloud.go), to learn
-about the API.
+See [Godoc](https://godoc.org/github.com/mlafeldt/pkgcloud) and
+[pkgcloud.go](pkgcloud.go) to learn about the API.
 
 ## Client Usage
 
