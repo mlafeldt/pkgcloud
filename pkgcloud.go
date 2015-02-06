@@ -1,4 +1,5 @@
 // Package pkgcloud allows you to talk to the PackageCloud API.
+// See https://packagecloud.io/docs/api
 package pkgcloud
 
 import (
@@ -14,7 +15,8 @@ import (
 	"github.com/mlafeldt/pkgcloud/upload"
 )
 
-var serviceURL = "https://packagecloud.io"
+// ServiceURL is the URL of PackageCloud's API.
+const ServiceURL = "https://packagecloud.io/api/v1"
 
 // A Client is a PackageCloud client.
 type Client struct {
@@ -65,8 +67,8 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 		return err
 	}
 
-	endpoint := fmt.Sprintf("%s/api/v1/repos/%s/packages.json",
-		serviceURL, repo)
+	endpoint := fmt.Sprintf("%s/repos/%s/packages.json",
+		ServiceURL, repo)
 	extraParams := map[string]string{
 		"package[distro_version_id]": strconv.Itoa(distID),
 	}
