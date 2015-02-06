@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	ExtensionDeb = ".deb"
-	ExtensionDsc = ".dsc"
-	ExtensionRpm = ".rpm"
+	extensionDeb = ".deb"
+	extensionDsc = ".dsc"
+	extensionRpm = ".rpm"
 )
 
 var debDistroIDs = map[string]int{
@@ -63,11 +63,11 @@ var rpmDistroIDs = map[string]int{
 
 func distroID(ext, name string) (int, error) {
 	switch strings.ToLower(ext) {
-	case ExtensionDeb, ExtensionDsc:
+	case extensionDeb, extensionDsc:
 		if id, ok := debDistroIDs[name]; ok {
 			return id, nil
 		}
-	case ExtensionRpm:
+	case extensionRpm:
 		if id, ok := rpmDistroIDs[name]; ok {
 			return id, nil
 		}
