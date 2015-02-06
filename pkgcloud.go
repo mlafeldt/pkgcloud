@@ -62,18 +62,19 @@ func decodeResponse(status int, body []byte) error {
 
 // CreatePackage pushes a new package to PackageCloud.
 func (c Client) CreatePackage(repo, distro, pkgFile string) error {
-	distID, err := distroID(filepath.Ext(pkgFile), distro)
-	if err != nil {
-		return err
+	var extraParams map[string]string
+	if distro != "" {
+		distID, err := distroID(filepath.Ext(pkgFile), distro)
+		if err != nil {
+			return err
+		}
+		extraParams = map[string]string{
+			"package[distro_version_id]": strconv.Itoa(distID),
+		}
 	}
 
-	endpoint := fmt.Sprintf("%s/repos/%s/packages.json",
-		ServiceURL, repo)
-	extraParams := map[string]string{
-		"package[distro_version_id]": strconv.Itoa(distID),
-	}
-	request, err := upload.NewRequest(endpoint, extraParams,
-		"package[package_file]", pkgFile)
+	endpoint := fmt.Sprintf("%s/repos/%s/packages.json", ServiceURL, repo)
+	request, err := upload.NewRequest(endpoint, extraParams, "package[package_file]", pkgFile)
 	if err != nil {
 		return err
 	}

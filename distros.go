@@ -12,6 +12,7 @@ const (
 	extensionDeb = ".deb"
 	extensionDsc = ".dsc"
 	extensionRpm = ".rpm"
+	extensionGem = ".gem"
 )
 
 var debDistroIDs = map[string]int{
@@ -71,6 +72,8 @@ func distroID(ext, name string) (int, error) {
 		if id, ok := rpmDistroIDs[name]; ok {
 			return id, nil
 		}
+	case extensionGem:
+		return 0, errors.New("RubyGem packages have no distribution")
 	default:
 		return 0, errors.New("invalid file extension: " + ext)
 	}
