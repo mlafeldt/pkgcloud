@@ -29,6 +29,11 @@ Usage:
 
 Examples:
 
-    $ pkgcloud-push mlafeldt/chef-runner/ubuntu/trusty chef-runner_0.8.0-2_amd64.deb
+    # Debian
+    $ pkgcloud-push mlafeldt/myrepo/ubuntu/trusty example_1.2.3_amd64.deb
 
-    $ pkgcloud-push mlafeldt/chef-runner/ubuntu/trusty *.deb
+    # RPM
+    $ pkgcloud-push mlafeldt/myrepo/el/7 *.rpm
+
+    # RubyGem
+    $ pkgcloud-push mlafeldt/myrepo example-1.2.3.gem
