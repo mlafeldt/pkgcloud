@@ -25,7 +25,7 @@ in your environment.
 
 Usage:
 
-    $ pkgcloud-push user/repo/distro/version /path/to/packages
+    $ pkgcloud-push user/repo[/distro/version] /path/to/packages
 
 Examples:
 

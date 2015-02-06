@@ -9,7 +9,7 @@ import (
 	"github.com/mlafeldt/pkgcloud"
 )
 
-var usage = "Usage: pkgcloud-push user/repo/distro/version /path/to/packages\n"
+var usage = "Usage: pkgcloud-push user/repo[/distro/version] /path/to/packages\n"
 
 func main() {
 	log.SetFlags(0)
