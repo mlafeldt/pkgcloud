@@ -19,11 +19,14 @@ type Client struct {
 	token string
 }
 
-func NewClient(token string) *Client {
+func NewClient(token string) (*Client, error) {
 	if token == "" {
 		token = os.Getenv("PACKAGECLOUD_TOKEN")
+		if token == "" {
+			return nil, errors.New("PACKAGECLOUD_TOKEN unset")
+		}
 	}
-	return &Client{token}
+	return &Client{token}, nil
 }
 
 func decodeResponse(status int, body []byte) error {

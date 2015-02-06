@@ -26,7 +26,11 @@ func main() {
 	}
 	packages := flag.Args()[1:]
 
-	client := pkgcloud.NewClient("")
+	client, err := pkgcloud.NewClient("")
+	if err != nil {
+		log.Fatalf("error: %s\n", err)
+	}
+
 	resc := make(chan string)
 	errc := make(chan error)
 
