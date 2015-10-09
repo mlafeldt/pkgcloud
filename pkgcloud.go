@@ -1,4 +1,4 @@
-// Package pkgcloud allows you to talk to the PackageCloud API.
+// Package pkgcloud allows you to talk to the packagecloud API.
 // See https://packagecloud.io/docs/api
 package pkgcloud
 
@@ -15,15 +15,15 @@ import (
 	"github.com/mlafeldt/pkgcloud/upload"
 )
 
-// ServiceURL is the URL of PackageCloud's API.
+// ServiceURL is the URL of packagecloud's API.
 const ServiceURL = "https://packagecloud.io/api/v1"
 
-// A Client is a PackageCloud client.
+// A Client is a packagecloud client.
 type Client struct {
 	token string
 }
 
-// NewClient creates a PackageCloud client. API requests are authenticated
+// NewClient creates a packagecloud client. API requests are authenticated
 // using an API token. If no token is passed, it will be read from the
 // PACKAGECLOUD_TOKEN environment variable.
 func NewClient(token string) (*Client, error) {
@@ -60,7 +60,7 @@ func decodeResponse(status int, body []byte) error {
 	}
 }
 
-// CreatePackage pushes a new package to PackageCloud.
+// CreatePackage pushes a new package to packagecloud.
 func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 	var extraParams map[string]string
 	if distro != "" {

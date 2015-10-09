@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/mlafeldt/pkgcloud.svg?branch=master)](https://travis-ci.org/mlafeldt/pkgcloud)
 [![GoDoc](https://godoc.org/github.com/mlafeldt/pkgcloud?status.svg)](https://godoc.org/github.com/mlafeldt/pkgcloud)
 
-Talk to the [PackageCloud API](https://packagecloud.io/docs/api), in Go.
+Talk to the [packagecloud API](https://packagecloud.io/docs/api), in Go.
 
 ## Installation
 
