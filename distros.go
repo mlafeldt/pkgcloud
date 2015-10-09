@@ -1,12 +1,60 @@
 // List of supported distributions with their internal names and IDs.
-// Generated from https://packagecloud.io/docs/api#resource_distributions
+//
+// Run `make generate` to update the list according to the Packagecloud API. By
+// embedding the returned data, we save an expensive API call.
+//
+// See https://packagecloud.io/docs/api#resource_distributions
 
 package pkgcloud
 
+//go:generate go-bindata -pkg $GOPACKAGE -o assets.go assets/
+
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 )
+
+type distribution struct {
+	DisplayName string `json:"display_name"`
+	IndexName   string `json:"index_name"`
+	Versions    []version
+}
+
+type version struct {
+	ID            int    `json:"id"`
+	DisplayName   string `json:"display_name"`
+	IndexName     string `json:"index_name"`
+	VersionNumber string `json:"version_number"`
+}
+
+func makeMap(distros []distribution) map[string]int {
+	m := make(map[string]int)
+	for _, d := range distros {
+		for _, v := range d.Versions {
+			k := strings.Join([]string{d.IndexName, v.IndexName}, "/")
+			m[k] = v.ID
+		}
+	}
+	return m
+}
+
+var debDistroIDs, rpmDistroIDs map[string]int
+
+func init() {
+	data, err := Asset("assets/distributions.json")
+	if err != nil {
+		panic(err)
+	}
+
+	var pkgTypes map[string][]distribution
+	if err := json.Unmarshal(data, &pkgTypes); err != nil {
+		panic(err)
+	}
+
+	debDistroIDs = makeMap(pkgTypes["deb"])
+	rpmDistroIDs = makeMap(pkgTypes["rpm"])
+}
 
 const (
 	extensionDeb = ".deb"
@@ -14,53 +62,6 @@ const (
 	extensionRpm = ".rpm"
 	extensionGem = ".gem"
 )
-
-var debDistroIDs = map[string]int{
-	"ubuntu/warty":    1,
-	"ubuntu/hoary":    2,
-	"ubuntu/breezy":   3,
-	"ubuntu/dapper":   4,
-	"ubuntu/edgy":     5,
-	"ubuntu/feisty":   6,
-	"ubuntu/gutsy":    7,
-	"ubuntu/hardy":    8,
-	"ubuntu/intrepid": 9,
-	"ubuntu/jaunty":   10,
-	"ubuntu/karmic":   11,
-	"ubuntu/lucid":    12,
-	"ubuntu/maverick": 13,
-	"ubuntu/natty":    14,
-	"ubuntu/oneiric":  15,
-	"ubuntu/precise":  16,
-	"ubuntu/quantal":  17,
-	"ubuntu/raring":   18,
-	"ubuntu/saucy":    19,
-	"ubuntu/trusty":   20,
-	"ubuntu/utopic":   142,
-	"debian/etch":     21,
-	"debian/lenny":    22,
-	"debian/squeeze":  23,
-	"debian/wheezy":   24,
-	"debian/jessie":   25,
-	"any/any":         35,
-}
-
-var rpmDistroIDs = map[string]int{
-	"el/5":         26,
-	"el/6":         27,
-	"el/7":         140,
-	"fedora/14":    28,
-	"fedora/15":    29,
-	"fedora/16":    30,
-	"fedora/17":    31,
-	"fedora/18":    32,
-	"fedora/19":    33,
-	"fedora/20":    34,
-	"fedora/21":    143,
-	"scientific/5": 138,
-	"scientific/6": 139,
-	"scientific/7": 141,
-}
 
 func distroID(ext, name string) (int, error) {
 	switch strings.ToLower(ext) {
