@@ -1,5 +1,9 @@
 // List of supported distributions with their internal names and IDs.
-// Generated from https://packagecloud.io/docs/api#resource_distributions
+//
+// Run `make generate` to update the list according to the Packagecloud API. By
+// embedding the returned data, we save an expensive API call.
+//
+// See https://packagecloud.io/docs/api#resource_distributions
 
 package pkgcloud
 
