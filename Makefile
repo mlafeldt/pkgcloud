@@ -2,6 +2,9 @@ ifndef PACKAGECLOUD_TOKEN
   $(error PACKAGECLOUD_TOKEN is not set)
 endif
 
+test:
+	go test -v ./...
+
 generate: assets/distributions.json
 	go generate -x ./...
 
