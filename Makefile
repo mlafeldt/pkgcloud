@@ -1,7 +1,3 @@
-ifndef PACKAGECLOUD_TOKEN
-  $(error PACKAGECLOUD_TOKEN is not set)
-endif
-
 test:
 	go test -v ./...
 
