@@ -24,7 +24,7 @@ url = 'https://%s:@packagecloud.io/api/v1/distributions.json' % token
 resp = urllib.urlopen(url)
 data = json.loads(resp.read())
 
-print '// Auto-generated with %s' % __file__
+print '// Generated with %s' % __file__
 print
 print 'package pkgcloud'
 print

@@ -1,4 +1,4 @@
-// Auto-generated with ./gendistros.py
+// Generated with ./gendistros.py
 
 package pkgcloud
 
