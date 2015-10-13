@@ -1,13 +1,14 @@
 // List of supported distributions with their internal names and IDs.
 //
 // Run `make generate` to update the list according to the Packagecloud API. By
-// embedding the returned data, we save an expensive API call.
+// generating the list once, we save an expensive API call.
 //
 // See https://packagecloud.io/docs/api#resource_distributions
 
 package pkgcloud
 
-//go:generate bash -c "./gendistros.py | gofmt > gendistros.go"
+//go:generate bash -c "./gendistros.py deb debDistroIDs | gofmt > distros_deb.go"
+//go:generate bash -c "./gendistros.py rpm rpmDistroIDs | gofmt > distros_rpm.go"
 
 import (
 	"errors"
