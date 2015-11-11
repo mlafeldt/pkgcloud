@@ -46,7 +46,7 @@ func main() {
 	}
 
 	failure := false
-	for range packages {
+	for _, _ = range packages {
 		select {
 		case res := <-resc:
 			log.Println(res)
