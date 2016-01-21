@@ -1,41 +1,70 @@
-// List of supported distributions with their internal names and IDs.
-//
-// Run `make generate` to update the list according to the Packagecloud API. By
-// generating the list once, we save an expensive API call.
-//
-// See https://packagecloud.io/docs/api#resource_distributions
+// Generated with ./gendistros.py
 
 package pkgcloud
 
-//go:generate bash -c "./gendistros.py deb debDistroIDs | gofmt > distros_deb.go"
-//go:generate bash -c "./gendistros.py rpm rpmDistroIDs | gofmt > distros_rpm.go"
-
-import (
-	"errors"
-	"strings"
-)
-
-const (
-	extensionDeb = ".deb"
-	extensionDsc = ".dsc"
-	extensionRpm = ".rpm"
-	extensionGem = ".gem"
-)
-
-func distroID(ext, name string) (int, error) {
-	switch strings.ToLower(ext) {
-	case extensionDeb, extensionDsc:
-		if id, ok := debDistroIDs[name]; ok {
-			return id, nil
-		}
-	case extensionRpm:
-		if id, ok := rpmDistroIDs[name]; ok {
-			return id, nil
-		}
-	case extensionGem:
-		return 0, errors.New("RubyGem packages have no distribution")
-	default:
-		return 0, errors.New("invalid file extension: " + ext)
-	}
-	return 0, errors.New("invalid distro name: " + name)
+var supportedDistros = map[string]int{
+	"ubuntu/warty":         1,
+	"ubuntu/hoary":         2,
+	"ubuntu/breezy":        3,
+	"ubuntu/dapper":        4,
+	"ubuntu/edgy":          5,
+	"ubuntu/feisty":        6,
+	"ubuntu/gutsy":         7,
+	"ubuntu/hardy":         8,
+	"ubuntu/intrepid":      9,
+	"ubuntu/jaunty":        10,
+	"ubuntu/karmic":        11,
+	"ubuntu/lucid":         12,
+	"ubuntu/maverick":      13,
+	"ubuntu/natty":         14,
+	"ubuntu/oneiric":       15,
+	"ubuntu/precise":       16,
+	"ubuntu/quantal":       17,
+	"ubuntu/raring":        18,
+	"ubuntu/saucy":         19,
+	"ubuntu/trusty":        20,
+	"debian/etch":          21,
+	"debian/lenny":         22,
+	"debian/squeeze":       23,
+	"debian/wheezy":        24,
+	"debian/jessie":        25,
+	"el/5":                 26,
+	"el/6":                 27,
+	"fedora/14":            28,
+	"fedora/15":            29,
+	"fedora/16":            30,
+	"fedora/17":            31,
+	"fedora/18":            32,
+	"fedora/19":            33,
+	"fedora/20":            34,
+	"any/any":              35,
+	"scientific/5":         138,
+	"scientific/6":         139,
+	"el/7":                 140,
+	"scientific/7":         141,
+	"ubuntu/utopic":        142,
+	"fedora/21":            143,
+	"ol/5":                 144,
+	"ol/6":                 145,
+	"ol/7":                 146,
+	"fedora/22":            147,
+	"ubuntu/vivid":         148,
+	"debian/stretch":       149,
+	"debian/buster":        150,
+	"fedora/23":            151,
+	"ubuntu/wily":          152,
+	"raspbian/wheezy":      153,
+	"raspbian/jessie":      154,
+	"raspbian/stretch":     155,
+	"raspbian/buster":      156,
+	"linuxmint/petra":      157,
+	"linuxmint/qiana":      158,
+	"linuxmint/rebecca":    159,
+	"linuxmint/rafaela":    160,
+	"linuxmint/rosa":       161,
+	"elementaryos/jupiter": 162,
+	"elementaryos/luna":    163,
+	"elementaryos/freya":   164,
+	"ubuntu/xenial":        165,
+	"python":               166,
 }

@@ -15,11 +15,17 @@ func newTarget(s string) (*target, error) {
 		return nil, errors.New("empty target")
 	}
 	elems := strings.Split(s, "/")
-	if len(elems) == 2 {
+	switch len(elems) {
+	case 2:
 		return &target{
 			repo: strings.Join(elems[0:2], "/"),
 		}, nil
-	} else if len(elems) == 4 {
+	case 3:
+		return &target{
+			repo:   strings.Join(elems[0:2], "/"),
+			distro: elems[2],
+		}, nil
+	case 4:
 		return &target{
 			repo:   strings.Join(elems[0:2], "/"),
 			distro: strings.Join(elems[2:4], "/"),
