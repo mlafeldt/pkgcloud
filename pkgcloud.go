@@ -9,11 +9,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/mlafeldt/pkgcloud/upload"
 )
+
+//go:generate bash -c "./gendistros.py supportedDistros | gofmt > distros.go"
 
 // ServiceURL is the URL of packagecloud's API.
 const ServiceURL = "https://packagecloud.io/api/v1"
@@ -64,9 +65,9 @@ func decodeResponse(status int, body []byte) error {
 func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 	var extraParams map[string]string
 	if distro != "" {
-		distID, err := distroID(filepath.Ext(pkgFile), distro)
-		if err != nil {
-			return err
+		distID, ok := supportedDistros[distro]
+		if !ok {
+			return fmt.Errorf("invalid distro name: %s", distro)
 		}
 		extraParams = map[string]string{
 			"package[distro_version_id]": strconv.Itoa(distID),
