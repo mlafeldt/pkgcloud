@@ -80,6 +80,7 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 		return err
 	}
 	request.SetBasicAuth(c.token, "")
+	request.Header.Add("User-Agent", "pkgcloud Go client")
 
 	client := &http.Client{}
 	resp, err := client.Do(request)
