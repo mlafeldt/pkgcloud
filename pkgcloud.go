@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,6 +17,8 @@ import (
 
 // ServiceURL is the URL of packagecloud's API.
 const ServiceURL = "https://packagecloud.io/api/v1"
+
+const UserAgent = "pkgcloud Go client"
 
 // A Client is a packagecloud client.
 type Client struct {
@@ -37,15 +38,16 @@ func NewClient(token string) (*Client, error) {
 	return &Client{token}, nil
 }
 
-func decodeResponse(status int, body []byte) error {
-	switch status {
+// decodeResponse checks http status code and tries to decode json body
+func decodeResponse(resp *http.Response, respJson interface{}) error {
+	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
-		return nil
+		return json.NewDecoder(resp.Body).Decode(respJson)
 	case http.StatusUnauthorized, http.StatusNotFound:
-		return fmt.Errorf("HTTP status: %s", http.StatusText(status))
+		return fmt.Errorf("HTTP status: %s", http.StatusText(resp.StatusCode))
 	case 422: // Unprocessable Entity
 		var v map[string][]string
-		if err := json.Unmarshal(body, &v); err != nil {
+		if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
 			return err
 		}
 		for _, messages := range v {
@@ -55,9 +57,9 @@ func decodeResponse(status int, body []byte) error {
 			}
 			break
 		}
-		return fmt.Errorf("invalid HTTP body: %s", body)
+		return fmt.Errorf("invalid HTTP body")
 	default:
-		return fmt.Errorf("unexpected HTTP status: %d", status)
+		return fmt.Errorf("unexpected HTTP status: %d", resp.StatusCode)
 	}
 }
 
@@ -80,7 +82,7 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 		return err
 	}
 	request.SetBasicAuth(c.token, "")
-	request.Header.Add("User-Agent", "pkgcloud Go client")
+	request.Header.Add("User-Agent", UserAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(request)
@@ -89,10 +91,64 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	return decodeResponse(resp, &struct{}{})
+}
+
+type Package struct {
+	Name           string `json:"name"`
+	Filename       string `json:"filename"`
+	DistroVersion  string `json:"distro_version"`
+	Version        string `json:"version"`
+	Release        string `json:"release"`
+	Type           string `json:"type"`
+	PackageUrl     string `json:"package_url"`
+	PackageHtmlUrl string `json:"package_html_url"`
+}
+
+// All list all packages in repository
+func (c Client) All(repo string) ([]Package, error) {
+	endpoint := fmt.Sprintf("%s/repos/%s/packages.json", ServiceURL, repo)
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.token, "")
+	req.Header.Add("User-Agent", UserAgent)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var packages []Package
+	err = decodeResponse(resp, &packages)
+	return packages, err
+}
+
+// Destroy removes package from repository.
+//
+// repo should be full path to repository
+// (e.g. youruser/repository/ubuntu/xenial).
+func (c Client) Destroy(repo, packageFilename string) error {
+	endpoint := fmt.Sprintf("%s/repos/%s/%s", ServiceURL, repo, packageFilename)
+
+	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
 		return err
 	}
 
-	return decodeResponse(resp.StatusCode, body)
+	req.SetBasicAuth(c.token, "")
+	req.Header.Add("User-Agent", UserAgent)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return decodeResponse(resp, &struct{}{})
 }
