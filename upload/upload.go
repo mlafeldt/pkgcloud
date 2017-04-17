@@ -41,5 +41,6 @@ func NewRequest(url string, params map[string]string, paramName, path string) (*
 		return nil, err
 	}
 	request.Header.Add("Content-Type", writer.FormDataContentType())
+	request.Header.Add("User-Agent", "pkgcloud Go client")
 	return request, nil
 }
