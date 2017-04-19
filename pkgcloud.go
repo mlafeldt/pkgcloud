@@ -152,3 +152,33 @@ func (c Client) Destroy(repo, packageFilename string) error {
 
 	return decodeResponse(resp, &struct{}{})
 }
+
+// Search searches packages from repository.
+// repo should be full path to repository
+// (e.g. youruser/repository/ubuntu/xenial).
+// q: The query string to search for package filename. If empty string is passed, all packages are returned
+// filter: Search by package type (RPMs, Debs, DSCs, Gem, Python) - Ignored when dist != ""
+// dist: The name of the distribution the package is in. (i.e. ubuntu, el/6) - Overrides filter.
+// perPage: The number of packages to return from the results set. If nothing passed, default is 30
+func (c Client) Search(repo, q, filter, dist string, perPage int) ([]Package, error) {
+	endpoint := fmt.Sprintf("%s/repos/%s/search.json?q=%s&filter=%s&dist=%s&per_page=%d", ServiceURL, repo, q, filter, dist, perPage)
+
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.token, "")
+	req.Header.Add("User-Agent", UserAgent)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var packages []Package
+	err = decodeResponse(resp, &packages)
+	return packages, err
+}
