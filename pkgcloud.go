@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/mlafeldt/pkgcloud/upload"
 	"github.com/tomnomnom/linkheader"
@@ -97,26 +98,26 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 }
 
 type Package struct {
-	Name               string `json:"name"`
-	CreatedAt          string `json:"created_at"`
-	Epoch              int    `json:"epoch"`
-	Scope              string `json:"scope"`
-	Private            bool   `json:"private"`
-	UploaderName       string `json:"uploader_name"`
-	Indexed            bool   `json:"indexed"`
-	RepositoryHtmlUrl  string `json:"repository_html_url"`
-	DownloadDetailsUrl string `json:"downloads_detail_url"`
-	DownloadSeriesUrl  string `json:"downloads_series_url"`
-	DownloadCountUrl   string `json:"downloads_count_url"`
-	PromoteUrl         string `json:"promote_url"`
-	DestroyUrl         string `json:"destroy_url"`
-	Filename           string `json:"filename"`
-	DistroVersion      string `json:"distro_version"`
-	Version            string `json:"version"`
-	Release            string `json:"release"`
-	Type               string `json:"type"`
-	PackageUrl         string `json:"package_url"`
-	PackageHtmlUrl     string `json:"package_html_url"`
+	Name               string    `json:"name"`
+	CreatedAt          time.Time `json:"created_at,string"`
+	Epoch              int       `json:"epoch"`
+	Scope              string    `json:"scope"`
+	Private            bool      `json:"private"`
+	UploaderName       string    `json:"uploader_name"`
+	Indexed            bool      `json:"indexed"`
+	RepositoryHtmlUrl  string    `json:"repository_html_url,string"`
+	DownloadDetailsUrl string    `json:"downloads_detail_url"`
+	DownloadSeriesUrl  string    `json:"downloads_series_url"`
+	DownloadCountUrl   string    `json:"downloads_count_url"`
+	PromoteUrl         string    `json:"promote_url"`
+	DestroyUrl         string    `json:"destroy_url"`
+	Filename           string    `json:"filename"`
+	DistroVersion      string    `json:"distro_version"`
+	Version            string    `json:"version"`
+	Release            string    `json:"release"`
+	Type               string    `json:"type"`
+	PackageUrl         string    `json:"package_url"`
+	PackageHtmlUrl     string    `json:"package_html_url"`
 }
 
 // All list all packages in repository
