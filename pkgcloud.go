@@ -7,10 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/mlafeldt/pkgcloud/upload"
+	"github.com/tomnomnom/linkheader"
 )
 
 //go:generate bash -c "./gendistros.py supportedDistros | gofmt > distros.go"
@@ -95,14 +98,26 @@ func (c Client) CreatePackage(repo, distro, pkgFile string) error {
 }
 
 type Package struct {
-	Name           string `json:"name"`
-	Filename       string `json:"filename"`
-	DistroVersion  string `json:"distro_version"`
-	Version        string `json:"version"`
-	Release        string `json:"release"`
-	Type           string `json:"type"`
-	PackageUrl     string `json:"package_url"`
-	PackageHtmlUrl string `json:"package_html_url"`
+	Name               string    `json:"name"`
+	CreatedAt          time.Time `json:"created_at,string"`
+	Epoch              int       `json:"epoch"`
+	Scope              string    `json:"scope"`
+	Private            bool      `json:"private"`
+	UploaderName       string    `json:"uploader_name"`
+	Indexed            bool      `json:"indexed"`
+	RepositoryHtmlUrl  string    `json:"repository_html_url,string"`
+	DownloadDetailsUrl string    `json:"downloads_detail_url"`
+	DownloadSeriesUrl  string    `json:"downloads_series_url"`
+	DownloadCountUrl   string    `json:"downloads_count_url"`
+	PromoteUrl         string    `json:"promote_url"`
+	DestroyUrl         string    `json:"destroy_url"`
+	Filename           string    `json:"filename"`
+	DistroVersion      string    `json:"distro_version"`
+	Version            string    `json:"version"`
+	Release            string    `json:"release"`
+	Type               string    `json:"type"`
+	PackageUrl         string    `json:"package_url"`
+	PackageHtmlUrl     string    `json:"package_html_url"`
 }
 
 // All list all packages in repository
@@ -181,4 +196,91 @@ func (c Client) Search(repo, q, filter, dist string, perPage int) ([]Package, er
 	var packages []Package
 	err = decodeResponse(resp, &packages)
 	return packages, err
+}
+
+type Paginated struct {
+	Total      int
+	PerPage    int
+	MaxPerPage int
+}
+
+type PaginatedPackages struct {
+	Packages []Package
+	Next     func() (*PaginatedPackages, error)
+	Paginated
+}
+
+func (c *Client) GetPaginatedPackages(endpoint string) (*PaginatedPackages, error) {
+	rv := &PaginatedPackages{}
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.token, "")
+	req.Header.Add("User-Agent", UserAgent)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	err = decodeResponse(resp, &rv.Packages)
+	if err != nil {
+		return nil, err
+	}
+	err = ExtractPaginationHeaders(&resp.Header, &rv.Paginated)
+	if err != nil {
+		return nil, err
+	}
+	header := resp.Header.Get("Link")
+	links := linkheader.Parse(header)
+	for _, link := range links {
+		if link.Rel == "next" {
+			if rv.MaxPerPage > 0 {
+				u, err := url.Parse(link.URL)
+				if err != nil {
+					return nil, err
+				}
+				q := u.Query()
+				q.Set("per_page", resp.Header.Get("Max-Per-Page"))
+				u.RawQuery = q.Encode()
+				link.URL = u.String()
+
+			}
+			rv.Next = func() (*PaginatedPackages, error) {
+				return c.GetPaginatedPackages(link.URL)
+			}
+		}
+	}
+	return rv, nil
+}
+
+func ExtractPaginationHeaders(h *http.Header, p *Paginated) error {
+	header := h.Get("Total")
+	total, err := strconv.Atoi(header)
+	if err != nil {
+		return err
+	}
+	p.Total = total
+
+	header = h.Get("Per-Page")
+	perPage, err := strconv.Atoi(header)
+	if err != nil {
+		return err
+	}
+	p.PerPage = perPage
+
+	header = h.Get("Max-Per-Page")
+	maxPerPage, err := strconv.Atoi(header)
+	if err != nil {
+		return err
+	}
+	p.MaxPerPage = maxPerPage
+
+	return nil
+}
+
+func (c *Client) PaginatedAll(repo string) (*PaginatedPackages, error) {
+	endpoint := fmt.Sprintf("%s/repos/%s/packages.json", ServiceURL, repo)
+	return c.GetPaginatedPackages(endpoint)
 }

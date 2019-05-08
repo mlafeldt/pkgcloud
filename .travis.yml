@@ -7,7 +7,10 @@ go:
 
 sudo: false
 
-script: make test
+script:
+    - export GO15VENDOREXPERIMENT=1
+    - go get github.com/tomnomnom/linkheader
+    - make test
 
 branches:
   only:
