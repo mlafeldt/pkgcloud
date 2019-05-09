@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/mlafeldt/pkgcloud/upload"
+	"github.com/peterhellberg/link"
+	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
 //go:generate bash -c "./gendistros.py supportedDistros | gofmt > distros.go"
@@ -22,7 +25,8 @@ const UserAgent = "pkgcloud Go client"
 
 // A Client is a packagecloud client.
 type Client struct {
-	token string
+	token       string
+	progressBar bool
 }
 
 // NewClient creates a packagecloud client. API requests are authenticated
@@ -35,7 +39,12 @@ func NewClient(token string) (*Client, error) {
 			return nil, errors.New("PACKAGECLOUD_TOKEN unset")
 		}
 	}
-	return &Client{token}, nil
+	return &Client{token, false}, nil
+}
+
+// Print a progress bar of paginated API requests when show is set to true
+func (c *Client) ShowProgress(show bool) {
+	c.progressBar = show
 }
 
 // decodeResponse checks http status code and tries to decode json body
@@ -108,24 +117,7 @@ type Package struct {
 // All list all packages in repository
 func (c Client) All(repo string) ([]Package, error) {
 	endpoint := fmt.Sprintf("%s/repos/%s/packages.json", ServiceURL, repo)
-	req, err := http.NewRequest("GET", endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.SetBasicAuth(c.token, "")
-	req.Header.Add("User-Agent", UserAgent)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var packages []Package
-	err = decodeResponse(resp, &packages)
-	return packages, err
+	return c.paginatedRequest(http.MethodGet, endpoint)
 }
 
 // Destroy removes package from repository.
@@ -134,23 +126,9 @@ func (c Client) All(repo string) ([]Package, error) {
 // (e.g. youruser/repository/ubuntu/xenial).
 func (c Client) Destroy(repo, packageFilename string) error {
 	endpoint := fmt.Sprintf("%s/repos/%s/%s", ServiceURL, repo, packageFilename)
+	_, err := c.apiRequest(http.MethodDelete, endpoint, &struct{}{})
 
-	req, err := http.NewRequest("DELETE", endpoint, nil)
-	if err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(c.token, "")
-	req.Header.Add("User-Agent", UserAgent)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return decodeResponse(resp, &struct{}{})
+	return err
 }
 
 // Search searches packages from repository.
@@ -162,8 +140,82 @@ func (c Client) Destroy(repo, packageFilename string) error {
 // perPage: The number of packages to return from the results set. If nothing passed, default is 30
 func (c Client) Search(repo, q, filter, dist string, perPage int) ([]Package, error) {
 	endpoint := fmt.Sprintf("%s/repos/%s/search.json?q=%s&filter=%s&dist=%s&per_page=%d", ServiceURL, repo, q, filter, dist, perPage)
+	return c.paginatedRequest(http.MethodGet, endpoint)
+}
 
-	req, err := http.NewRequest("GET", endpoint, nil)
+
+func (c Client) paginatedRequest(method string, endpoint string) ([]Package, error) {
+	var (
+		allPackages []Package
+		getLastPage bool
+	)
+
+	newPage := make(chan bool)
+	total := make(chan int)
+
+	if c.progressBar {
+		getLastPage = true
+		progBar := pb.New(0)
+		progBar.SetMaxWidth(100)
+		progBar.Start()
+		defer func() {
+			progBar.Increment()
+			progBar.Finish()
+		}()
+
+		go func() {
+			for {
+				select {
+				case np := <-newPage:
+					if !np {
+						return
+					}
+					progBar.Increment()
+				case t := <-total:
+					progBar.SetTotal(t)
+				}
+			}
+		}()
+	}
+
+	for {
+		var pkgs []Package
+		var group link.Group
+		group, err := c.apiRequest(method, endpoint, &pkgs)
+		if err != nil {
+			return nil, err
+		}
+
+		allPackages = append(allPackages, pkgs...)
+
+		next, found := group["next"]
+		newPage <- found
+		if !found {
+			break
+		}
+		endpoint = next.URI
+
+		if !getLastPage {
+			continue
+		}
+
+		if last, found := group["last"]; found {
+			re := regexp.MustCompile(`page=(\d+)$`)
+			pages, err := strconv.Atoi(re.FindStringSubmatch(last.URI)[1])
+			if err != nil {
+				continue
+			}
+			getLastPage = false
+			total <- pages
+		}
+	}
+
+	return allPackages, nil
+
+}
+
+func (c Client) apiRequest(method string, endpoint string, decodedResp interface{}) (link.Group, error) {
+	req, err := http.NewRequest(method, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +230,12 @@ func (c Client) Search(repo, q, filter, dist string, perPage int) ([]Package, er
 	}
 	defer resp.Body.Close()
 
-	var packages []Package
-	err = decodeResponse(resp, &packages)
-	return packages, err
+	err = decodeResponse(resp, decodedResp)
+	if err != nil {
+		return nil, err
+	}
+
+	// API are paginated, with next page in the response header, as "Link"
+	// element
+	return link.ParseResponse(resp), nil
 }
