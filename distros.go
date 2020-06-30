@@ -105,4 +105,6 @@ var supportedDistros = map[string]int{
 	"linuxmint/tessa": 202,
 	"ubuntu/disco": 203,
 	"fedora/30": 204,
+	"ubuntu/eoan": 205,
+	"el/8": 206,
 }
