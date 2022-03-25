@@ -200,7 +200,9 @@ func (c Client) paginatedRequest(method string, endpoint string) ([]Package, err
 		}
 
 		if last, found := group["last"]; found {
-			re := regexp.MustCompile(`page=(\d+)$`)
+			// expect format similar to https://packagecloud.io/api/v1/repos/foo/bar/search.json?dist=&filter=&page=57&per_page=10&q=querystring
+			// or sometimes page=<number> is the end of the string
+			re := regexp.MustCompile(`page=(\d+)($|&)`)
 			pages, err := strconv.Atoi(re.FindStringSubmatch(last.URI)[1])
 			if err != nil {
 				continue
