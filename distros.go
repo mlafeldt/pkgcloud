@@ -107,4 +107,5 @@ var supportedDistros = map[string]int{
 	"fedora/30": 204,
 	"ubuntu/eoan": 205,
 	"el/8": 206,
+	"ubuntu/focal": 210,
 }
