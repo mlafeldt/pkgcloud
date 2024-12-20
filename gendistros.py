@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
  Generate Go map of distros supported by Packagecloud API
  By generating the list once, we save an expensive API call.
